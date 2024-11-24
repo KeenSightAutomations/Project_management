@@ -1,0 +1,272 @@
+{
+  "name": "2. Quarterly ROI Reports - Project Management",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7d0869aa-e1b2-4d36-b627-ff85f71e029d",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl76OOs67fBtDtFS",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr/tbl76OOs67fBtDtFS"
+        },
+        "filterByFormula": "{Completion Status} = \"Completed\"",
+        "options": {}
+      },
+      "id": "4af06e0a-d236-4759-9c39-09ec0c5bbe05",
+      "name": "Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1300,
+        300
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.airtable.com/v0/meta/bases/appH6XIvMnkrBPUlr/tables",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"description\": \"Report\",\n    \"fields\": [\n      {\n        \"description\": \"Project type\",\n        \"name\": \"Project type\",\n        \"type\": \"singleLineText\"\n      },\n      {\n        \"name\": \"Number of Projects\",\n        \"type\": \"number\",\n        \"options\": {\n        \"precision\": 0\n      }\n      },\n      {\n        \"name\": \"Average ROI %\",\n        \"type\": \"number\",\n        \"options\": {\n        \"precision\": 0\n      }\n      },\n      {\n        \"name\": \"Top 10% Highest ROI Projects\",\n        \"options\": {\n          \"color\": \"greenBright\",\n          \"icon\": \"check\"\n        },\n        \"type\": \"checkbox\"\n      },\n      {\n        \"name\": \"Top 10% Lowest ROI Projects\",\n        \"options\": {\n          \"color\": \"greenBright\",\n          \"icon\": \"check\"\n        },\n        \"type\": \"checkbox\"\n      }\n    ],\n    \"name\": \"{{ $json.projectName }}\"\n  }",
+        "options": {}
+      },
+      "id": "a7844845-b71a-4858-90f3-f94c1ca365a7",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        300
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1; // JavaScript months are 0-based\n\nlet quarterName = '';\nif (month >= 1 && month <= 3) {\n  quarterName = `Q1 ${year}`;\n} else if (month >= 4 && month <= 6) {\n  quarterName = `Q2 ${year}`;\n} else if (month >= 7 && month <= 9) {\n  quarterName = `Q3 ${year}`;\n} else {\n  quarterName = `Q4 ${year}`;\n}\n\nreturn { projectName: `Project Statistics - ${quarterName}` };\n"
+      },
+      "id": "099435bc-08ba-4af2-8995-0d16f3a09095",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch all input data using $input.all()\nconst inputData = $input.all().map(item => item.json);\n\n// Group data by Project Type\nconst grouped = inputData.reduce((acc, record) => {\n  const type = record[\"Project Type\"];\n  if (!acc[type]) {\n    acc[type] = {\n      \"Project type\": type,\n      \"number of projects\": 0,\n      \"Average ROI %\": 0,\n      \"ROIs\": []\n    };\n  }\n  acc[type][\"number of projects\"]++;\n  acc[type][\"ROIs\"].push(record[\"ROI (%)\"]);\n  return acc;\n}, {});\n\n// Calculate the average ROI for each Project Type\nconst averageROIByType = Object.keys(grouped).map(type => {\n  const data = grouped[type];\n  const totalROI = data.ROIs.reduce((sum, roi) => sum + roi, 0);\n  const avgROI = totalROI / data.ROIs.length;\n  grouped[type][\"Average ROI %\"] = parseFloat(avgROI.toFixed(1)); // Keep one decimal place\n  return avgROI;\n});\n\n// Sort average ROIs in descending order\nconst sortedAverageROIs = [...averageROIByType].sort((a, b) => b - a);\n\n// Calculate the threshold for Top 10% and Bottom 10% based on average ROI\nconst top10PercentIndex = Math.ceil(sortedAverageROIs.length * 0.1) - 1;\nconst bottom10PercentIndex = Math.floor(sortedAverageROIs.length * 0.9);\n\nconst top10PercentThreshold = sortedAverageROIs[top10PercentIndex] || sortedAverageROIs[0];\nconst bottom10PercentThreshold = sortedAverageROIs[bottom10PercentIndex] || sortedAverageROIs[sortedAverageROIs.length - 1];\n\n// Calculate metrics for each Project Type\nconst result = Object.keys(grouped).map(type => {\n  const data = grouped[type];\n  const avgROI = data[\"Average ROI %\"];\n\n  // Check if the average ROI of this project type falls in the top or bottom 10%\n  const isTop10 = avgROI >= top10PercentThreshold;\n  const isBottom10 = avgROI <= bottom10PercentThreshold;\n\n  return {\n    \"Project type\": data[\"Project type\"],\n    \"number of projects\": data[\"number of projects\"],\n    \"Average ROI %\": parseFloat(avgROI.toFixed(1)), // Format with one decimal place\n    \"Top 10% Highest ROI Projects\": isTop10,\n    \"Top 10% Lowest ROI Projects\": isBottom10\n  };\n});\n\n// Return the result\nreturn result;\n"
+      },
+      "id": "ad2225cc-f12c-4e78-833f-a88db48400eb",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request').first().json.id }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Top 10% Highest ROI Projects": "={{ $json['Top 10% Highest ROI Projects'] }}",
+            "Top 10% Lowest ROI Projects": "={{ $json['Top 10% Lowest ROI Projects'] }}",
+            "Project type": "={{ $json['Project type'] }}",
+            "Number of Projects": "={{ $json['number of projects'] }}",
+            "Average ROI %": "={{ $json['Average ROI %'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Project type",
+              "displayName": "Project type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Number of Projects",
+              "displayName": "Number of Projects",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Average ROI %",
+              "displayName": "Average ROI %",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Top 10% Highest ROI Projects",
+              "displayName": "Top 10% Highest ROI Projects",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Top 10% Lowest ROI Projects",
+              "displayName": "Top 10% Lowest ROI Projects",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "535fe324-d6fd-41ac-bfc2-e7d865ffceae",
+      "name": "Airtable4",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        300
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Airtable4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "88284c4a-90c1-4327-8091-f99adef8c55d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db5a9c4e10dda7fd897779c47e93e754677e7c8b597458c46dfa01effec1646d"
+  },
+  "id": "NppUkW3EsfitWosz",
+  "tags": []
+}

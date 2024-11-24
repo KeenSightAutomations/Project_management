@@ -1,0 +1,436 @@
+{
+  "name": "3. Alerts - Project managements",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl76OOs67fBtDtFS",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr/tbl76OOs67fBtDtFS"
+        },
+        "filterByFormula": "{Completion Status} = \"Completed\"",
+        "options": {}
+      },
+      "id": "7c660acf-6bca-4621-b44e-97af5e7c35b2",
+      "name": "Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        600,
+        380
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "2f3a6ca4-f4e4-4d6a-9318-5e884462981c",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        340,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch all input data from the Airtable node\nconst inputData = $input.all().map(item => item.json);\n\n// Filter projects where the ROI is below 10%\nconst filteredProjects = inputData.filter(record => record[\"ROI (%)\"] < 10);\n\n// Return all keys from the input JSON for the filtered projects\nreturn filteredProjects;\n"
+      },
+      "id": "89e30d8e-1f59-43cd-b555-d6143473495c",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "khalil.koulal3@gmail.com",
+        "toEmail": "khalilzinox@gmail.Com",
+        "subject": "Alert",
+        "html": "={{ $json.emailBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "66b81d51-bf27-43e6-a977-29d3bca9c503",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2000,
+        60
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "dIj8kuZfIK6xOMfm",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch data from the previous node\nconst data = $input.all().map(item => item.json);\n\n// Initialize email body in HTML format\nlet emailBody = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      background-color: #f9f9f9;\n      margin: 0;\n      padding: 20px;\n    }\n    .container {\n      max-width: 600px;\n      margin: auto;\n      background-color: #ffffff;\n      border-radius: 8px;\n      padding: 20px;\n      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);\n    }\n    h1 {\n      font-size: 24px;\n      color: #2c3e50;\n      text-align: center;\n    }\n    h2 {\n      font-size: 20px;\n      color: #16a085;\n      margin-bottom: 10px;\n    }\n    ul {\n      font-size: 16px;\n      color: #555;\n      padding-left: 20px;\n    }\n    li {\n      margin-bottom: 8px;\n    }\n    p {\n      font-size: 16px;\n      color: #333;\n      margin-bottom: 15px;\n    }\n    .project {\n      margin-bottom: 30px;\n    }\n    .divider {\n      border-top: 1px solid #ddd;\n      margin: 20px 0;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <h1>Project Cost Analysis & Improvement Suggestions</h1>\n`;\n\n// Loop through each project and append details to the email body\ndata.forEach(project => {\n  emailBody += `\n    <div class=\"project\">\n      <h2>${project[\"Project Name\"]}</h2>\n      <p><strong>Cost Details:</strong> ${project[\"Cost Details\"]}</p>\n      <p><strong>Potential Areas for Improvement:</strong></p>\n      <ul>\n        ${project[\"Potential Areas for Improvement\"]\n          .split(\"\\n\")\n          .map(line => `<li>${line.trim()}</li>`)\n          .join(\"\")}\n      </ul>\n      <p><strong>Detailed Recommendations:</strong></p>\n      <ul>\n        ${project[\"Detailed Recommendations\"]\n          .split(\"\\n\")\n          .map(line => `<li>${line.trim()}</li>`)\n          .join(\"\")}\n      </ul>\n    </div>\n    <div class=\"divider\"></div>\n  `;\n});\n\n// Close the email body\nemailBody += `\n  </div>\n</body>\n</html>\n`;\n\n// Return the generated email body as an output\nreturn [{ json: { emailBody } }];\n"
+      },
+      "id": "6e3dc3ca-f73b-4cc0-9808-c47979a41152",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "id": "3b317f68-69cf-40d3-b3b0-8e443775f4fd",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1480,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node Code\n\n// Get JSON data from the previous node\nconst jsonData = $input.all(); // Retrieve all input data\n\n// Extract projects from the input data\nconst projects = jsonData.map(item => item.json); // Extract JSON from each input item\n\n// Filter projects with ROI (%) greater than 50\nconst filteredProjects = projects.filter(project => project[\"ROI (%)\"] > 50);\n\n// Return the filtered projects\nreturn filteredProjects.map(project => ({\n    json: project\n}));\n"
+      },
+      "id": "c60a2d48-816d-454b-b4d1-1a47314a3c4b",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: High ROI Projects\nconst jsonData = $input.all(); // Fetch input from the previous node\n\n// Extract and filter projects\nconst projects = jsonData.map(item => item.json);\nconst highROIProjects = projects.filter(project => project[\"ROI (%)\"] > 50);\n\n// Start building the HTML email\nlet emailHTML = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      margin: 0;\n      padding: 20px;\n      color: #333;\n    }\n    h1 {\n      color: #4CAF50;\n    }\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      margin: 20px 0;\n    }\n    th, td {\n      border: 1px solid #ddd;\n      padding: 8px;\n      text-align: left;\n    }\n    th {\n      background-color: #4CAF50;\n      color: white;\n    }\n    tr:nth-child(even) {\n      background-color: #f2f2f2;\n    }\n    tr:hover {\n      background-color: #ddd;\n    }\n    .summary {\n      margin: 20px 0;\n      font-size: 16px;\n    }\n  </style>\n</head>\n<body>\n  <h1>Successful Project Strategies</h1>\n  <p class=\"summary\">Below is a list of projects with exceptional ROI (>50%), serving as great examples of effective strategies. We recommend considering similar approaches for future projects.</p>\n  <table>\n    <tr>\n      <th>Project Name</th>\n      <th>Client Name</th>\n      <th>ROI (%)</th>\n      <th>Revenue Generated</th>\n      <th>Actual Cost</th>\n    </tr>\n`;\n\n// Populate table rows with project data\nhighROIProjects.forEach(project => {\n  emailHTML += `\n    <tr>\n      <td>${project[\"Project Name\"]}</td>\n      <td>${project[\"Client Name\"]}</td>\n      <td>${project[\"ROI (%)\"]}</td>\n      <td>$${project[\"Revenue Generated\"]}</td>\n      <td>$${project[\"Actual Coast\"]}</td>\n    </tr>\n  `;\n});\n\n// Close the HTML structure\nemailHTML += `\n  </table>\n  <p>Thank you for reviewing our successful projects. Let’s continue building on these strategies for even greater success!</p>\n</body>\n</html>\n`;\n\n// Output the HTML email\nreturn {\n  html: emailHTML\n};\n"
+      },
+      "id": "376f0bcb-8fe5-4df7-add1-2fba9c98718c",
+      "name": "Code3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "khalil.koulal3@gmail.com",
+        "toEmail": "khalilzinox@gmail.Com",
+        "subject": "Alert",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6f6d1338-978d-41cd-8f7a-1ec0990bad1d",
+      "name": "Send Email1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2000,
+        380
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "dIj8kuZfIK6xOMfm",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: JSON data (replace with actual data in n8n or your environment)\nconst jsonData = $input.all().map(item => item.json); // Fetch input data\n\n// Group projects by name and count occurrences of exceeding budget\nconst projectBudgetStats = {};\n\n// Iterate over all projects\njsonData.forEach(project => {\n    const projectName = project[\"Project Name\"];\n    const actualCost = project[\"Actual Coast\"];\n    const budget = project[\"Budget\"];\n\n    // Check if the project exceeded its budget\n    if (actualCost > budget) {\n        if (!projectBudgetStats[projectName]) {\n            projectBudgetStats[projectName] = {\n                name: projectName,\n                client: project[\"Client Name\"],\n                exceededCount: 0\n            };\n        }\n        projectBudgetStats[projectName].exceededCount += 1;\n    }\n});\n\n// Filter projects that consistently exceeded their budget (exceeded > 1 time)\nconst consistentlyOverBudgetProjects = Object.values(projectBudgetStats).filter(\n    project => project.exceededCount > 1\n);\n\n// Output the results\nreturn consistentlyOverBudgetProjects.map(project => ({\n    json: {\n        ProjectName: project.name,\n        ClientName: project.client,\n        TimesExceededBudget: project.exceededCount\n    }\n}));\n"
+      },
+      "id": "5af4ae0c-479f-4f2c-a3e7-20b42f365ef2",
+      "name": "Code4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the data from the previous node\nconst projects = $input.all().map(item => item.json); // Retrieve the data from the last node\n\n// Start building the HTML email\nlet emailHTML = `\n<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            margin: 20px;\n            color: #333;\n        }\n        h1 {\n            color: #D9534F;\n        }\n        table {\n            width: 100%;\n            border-collapse: collapse;\n            margin-top: 20px;\n        }\n        th, td {\n            border: 1px solid #ddd;\n            padding: 8px;\n            text-align: left;\n        }\n        th {\n            background-color: #f2f2f2;\n            color: #333;\n        }\n        tr:nth-child(even) {\n            background-color: #f9f9f9;\n        }\n        tr:hover {\n            background-color: #f1f1f1;\n        }\n    </style>\n</head>\n<body>\n    <h1>Consistently Over-Budget Projects</h1>\n    <p>The following projects have consistently exceeded their budgeted costs:</p>\n    <table>\n        <thead>\n            <tr>\n                <th>Project Name</th>\n                <th>Client Name</th>\n                <th>Times Exceeded Budget</th>\n            </tr>\n        </thead>\n        <tbody>\n`;\n\n// Populate table rows with project data dynamically\nprojects.forEach(project => {\n    emailHTML += `\n        <tr>\n            <td>${project.ProjectName}</td>\n            <td>${project.ClientName}</td>\n            <td>${project.TimesExceededBudget}</td>\n        </tr>\n    `;\n});\n\n// Close the HTML structure\nemailHTML += `\n        </tbody>\n    </table>\n    <p>We recommend reviewing these projects to improve budget management in the future.</p>\n</body>\n</html>\n`;\n\n// Return the HTML content for use in the email node\nreturn {\n    html: emailHTML\n};\n"
+      },
+      "id": "1bd67864-7751-45bb-9fc8-a2616fa967d3",
+      "name": "Code5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "khalil.koulal3@gmail.com",
+        "toEmail": "khalilzinox@gmail.Com",
+        "subject": "Alert",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3f25385c-6b60-4651-b602-e282e2d2e033",
+      "name": "Send Email2",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2000,
+        600
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "dIj8kuZfIK6xOMfm",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert in project management and financial analysis."
+            },
+            {
+              "content": "=Analyze the following project data and provide a detailed report, including the following:\n\n1- Project Name: {{ $json['Project Name'] }}\n2- Cost Details: Provide an analysis of the cost contributors based on the given data fields (e.g.,Material Costs: {{ $json[\"Material Costs\"] }}, Labor Hours: {{ $json['Labor Hours'] }},Budget: {{ $json.Budget }}, and Unexpected Expenses: {{ $json['Unexpected Expenses'] }}). Summarize the cost drivers and their potential impact on ROI (%): {{ $json['ROI (%)'] }}.\n\n3- Potential Areas for Improvement: Suggest actionable strategies to improve ROI and reduce costs; Focus on:\nStreamlining project management.\nOptimizing resource allocation.\nIdentifying opportunities to reduce unnecessary costs.\n\n4- Detailed Recommendations: Provide practical, specific steps the team can take to address inefficiencies and improve overall project profitability. Include:\nA breakdown of actionable steps based on the project data.\nSpecific areas to target for cost savings and efficiency improvements.\n\nHere is other data you may need\n\nRevenue Generated: {{ $json['Revenue Generated'] }}\ntime-to-completion: {{ $json['time-to-completion'] }}\nProject Type: {{ $json['Project Type'] }}\n\n\n\n"
+            },
+            {
+              "content": "Extract and return only the JSON object containing the issue details and preventive maintenance steps, without any additional explanation or commentary. The JSON object should include the following structure: Issue Type, count, notes, and preventive maintenance steps. Do not include any introductory or closing text—return only the raw JSON data.(with no ```json)\npreventive maintenance steps should be a long text instead of an array\nEach project should be structured as follow :\n{\n\"Project Name\": \n\"Project_name_here\",\n\"Coast detailed\": \n\"Coast_detailed_here\",\n\"Potential Areas for Improvement\": \n\"1. suggestion_here.\\n 2. suggestion_here\\n 3. suggestion_here.\\n\",\n\"Detailed Recommendations\": \n\"1. Recommendation_here\\n 2. Recommendation_here \\n3. Recommendation_here\\n\"\n}\n",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a00dc279-249c-4929-ae88-58823a20ea3a",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.5,
+      "position": [
+        1160,
+        60
+      ],
+      "executeOnce": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "aLv0zlWAxhm9Z7mm",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Code": [
+      {
+        "json": {
+          "id": "rec3ktp4XmSql2nHs",
+          "createdTime": "2024-11-22T20:07:08.000Z",
+          "Material Costs": 8,
+          "Revenue Generated": 70,
+          "time-to-completion": 2,
+          "Labor Hours": 5,
+          "Budget": 525,
+          "Project Type": "Software Development",
+          "Completion Status": "Completed",
+          "ROI (%)": -87,
+          "Project Name": "Project Gamma",
+          "Unexpected Expenses": 2,
+          "Client Name": "Client A",
+          "Id": "rec3ktp4XmSql2nHs",
+          "Actual Coast": 535,
+          "Last Modified Time": "2024-11-22T20:07:22.000Z"
+        }
+      },
+      {
+        "json": {
+          "id": "rec55WeGhAk4ebgnM",
+          "createdTime": "2024-11-18T22:59:25.000Z",
+          "Material Costs": 3,
+          "Revenue Generated": 60,
+          "time-to-completion": 4,
+          "Labor Hours": 6,
+          "Budget": 65,
+          "Project Type": "Gamma",
+          "Completion Status": "Completed",
+          "ROI (%)": -14,
+          "Project Name": "Project X",
+          "Unexpected Expenses": 2,
+          "Client Name": "Client E",
+          "Id": "rec55WeGhAk4ebgnM",
+          "Actual Coast": 70,
+          "Last Modified Time": "2024-11-22T19:34:51.000Z"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Send Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Send Email2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "70c1c351-d577-4918-a75a-b9d1a17aae9b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db5a9c4e10dda7fd897779c47e93e754677e7c8b597458c46dfa01effec1646d"
+  },
+  "id": "1O7HJy22FXHQ2G4p",
+  "tags": []
+}

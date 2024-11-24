@@ -1,0 +1,771 @@
+{
+  "name": "1. Post-Completion ROI Calculation - Project Management",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "11027d00-bded-44e0-9ee7-e4a4bebf677c",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input data as an array of JSON objects\nconst inputJson = $input.all().map(item => item.json);\n\n// Process each record to calculate ROI\nconst result = inputJson.map(record => {\n  // Ensure \"Revenue Generated\" and \"Actual Coast\" fields are present\n  if (record[\"Revenue Generated\"] === undefined || record[\"Actual Coast\"] === undefined) {\n    throw new Error(\"Missing fields: 'Revenue Generated' or 'Actual Coast' are required.\");\n  }\n\n  const revenueGenerated = record[\"Revenue Generated\"]; // Fetch Revenue Generated\n  const actualCoast = record[\"Actual Coast\"]; // Fetch Actual Coast\n\n  // Calculate ROI using the formula\n  const roi = ((revenueGenerated - actualCoast) / actualCoast) * 100;\n\n  // Return only the id and calculated ROI\n  return {\n    json: {\n      id: record.id, // Include the record ID\n      ROI: Math.round(roi), // Add the rounded ROI\n    },\n  };\n});\n\n// Return the processed data\nreturn result;\n"
+      },
+      "id": "d241ae34-ea2a-46f1-b3bf-ae40fe3a171d",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2520,
+        1220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl76OOs67fBtDtFS",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr/tbl76OOs67fBtDtFS"
+        },
+        "filterByFormula": "AND({Completion Status} = \"Completed\", {Last Modified Time} >= DATEADD(NOW(), -1, 'hour'))",
+        "options": {
+          "fields": [
+            "Id",
+            "Project Type",
+            "Budget",
+            "Project Name",
+            "Client Name",
+            "Last Modified Time",
+            "Completion Status",
+            "Labor Hours",
+            "Revenue Generated",
+            "Actual Coast",
+            "Unexpected Expenses",
+            "Material Costs",
+            "time-to-completion",
+            "ROI (%)"
+          ]
+        }
+      },
+      "id": "feae6c4d-e138-4c5e-ac3f-ba40231750e0",
+      "name": "Search record1",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2020,
+        1120
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f3ffbcb1-b6a5-4e02-b48f-6eb239be318e",
+              "leftValue": "={{ $json.hasOwnProperty(\"ROI (%)\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "428e6fb8-836a-425d-8ad8-f4f33fb9a730",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2220,
+        1120
+      ],
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input data as an array of JSON objects\nconst inputJson = $input.all().map(item => item.json);\n\n// Process each record to calculate ROI\nconst result = inputJson.map(record => {\n  // Ensure \"Revenue Generated\" and \"Actual Coast\" fields are present\n  if (record[\"Revenue Generated\"] === undefined || record[\"Actual Coast\"] === undefined) {\n    throw new Error(\"Missing fields: 'Revenue Generated' or 'Actual Coast' are required.\");\n  }\n\n  const revenueGenerated = record[\"Revenue Generated\"]; // Fetch Revenue Generated\n  const actualCoast = record[\"Actual Coast\"]; // Fetch Actual Coast\n\n  // Calculate ROI using the formula\n  const roi = ((revenueGenerated - actualCoast) / actualCoast) * 100;\n\n  // Return only the id and calculated ROI\n  return {\n    json: {\n      id: record.id, // Include the record ID\n      ROI: Math.round(roi), // Add the rounded ROI\n    },\n  };\n});\n\n// Return the processed data\nreturn result;\n"
+      },
+      "id": "cbace395-4e0b-4829-97fa-f3e06a971bb3",
+      "name": "Code2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2520,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "c7c03a13-0544-4c64-bcac-0ba0330a9211",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl76OOs67fBtDtFS",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr/tbl76OOs67fBtDtFS"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ROI (%)": "={{ $json.ROI }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Id",
+              "displayName": "Id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Project Name",
+              "displayName": "Project Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Project Type",
+              "displayName": "Project Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Software Development",
+                  "value": "Software Development"
+                },
+                {
+                  "name": "Marketing Campaign",
+                  "value": "Marketing Campaign"
+                },
+                {
+                  "name": "Product Design",
+                  "value": "Product Design"
+                },
+                {
+                  "name": "Infrastructure Upgrade",
+                  "value": "Infrastructure Upgrade"
+                },
+                {
+                  "name": "Research",
+                  "value": "Research"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Client Name",
+              "displayName": "Client Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Client A",
+                  "value": "Client A"
+                },
+                {
+                  "name": "Client B",
+                  "value": "Client B"
+                },
+                {
+                  "name": "Client C",
+                  "value": "Client C"
+                },
+                {
+                  "name": "Client D",
+                  "value": "Client D"
+                },
+                {
+                  "name": "Client E",
+                  "value": "Client E"
+                },
+                {
+                  "name": "Client j",
+                  "value": "Client j"
+                },
+                {
+                  "name": "Client X",
+                  "value": "Client X"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Material Costs",
+              "displayName": "Material Costs",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Unexpected Expenses",
+              "displayName": "Unexpected Expenses",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Actual Coast",
+              "displayName": "Actual Coast",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Revenue Generated",
+              "displayName": "Revenue Generated",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Labor Hours",
+              "displayName": "Labor Hours",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Completion Status",
+              "displayName": "Completion Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "time-to-completion",
+              "displayName": "time-to-completion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ROI (%)",
+              "displayName": "ROI (%)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "89959884-ce05-43ff-8dcf-c24a30618db9",
+      "name": "Airtable2",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2740,
+        1220
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appH6XIvMnkrBPUlr",
+          "mode": "list",
+          "cachedResultName": "Project ROI Tracking for Project Managers",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl76OOs67fBtDtFS",
+          "mode": "list",
+          "cachedResultName": "Imported table",
+          "cachedResultUrl": "https://airtable.com/appH6XIvMnkrBPUlr/tbl76OOs67fBtDtFS"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ROI (%)": "={{ $json.ROI }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Id",
+              "displayName": "Id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Project Name",
+              "displayName": "Project Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Project Type",
+              "displayName": "Project Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Software Development",
+                  "value": "Software Development"
+                },
+                {
+                  "name": "Marketing Campaign",
+                  "value": "Marketing Campaign"
+                },
+                {
+                  "name": "Product Design",
+                  "value": "Product Design"
+                },
+                {
+                  "name": "Infrastructure Upgrade",
+                  "value": "Infrastructure Upgrade"
+                },
+                {
+                  "name": "Research",
+                  "value": "Research"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Client Name",
+              "displayName": "Client Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Client A",
+                  "value": "Client A"
+                },
+                {
+                  "name": "Client B",
+                  "value": "Client B"
+                },
+                {
+                  "name": "Client C",
+                  "value": "Client C"
+                },
+                {
+                  "name": "Client D",
+                  "value": "Client D"
+                },
+                {
+                  "name": "Client E",
+                  "value": "Client E"
+                },
+                {
+                  "name": "Client j",
+                  "value": "Client j"
+                },
+                {
+                  "name": "Client X",
+                  "value": "Client X"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Material Costs",
+              "displayName": "Material Costs",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Unexpected Expenses",
+              "displayName": "Unexpected Expenses",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Actual Coast",
+              "displayName": "Actual Coast",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Revenue Generated",
+              "displayName": "Revenue Generated",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Labor Hours",
+              "displayName": "Labor Hours",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Completion Status",
+              "displayName": "Completion Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "In Progress",
+                  "value": "In Progress"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "time-to-completion",
+              "displayName": "time-to-completion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ROI (%)",
+              "displayName": "ROI (%)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "512531cb-cfe3-4c66-93ea-5f9dc0b37371",
+      "name": "Airtable3",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2740,
+        1040
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xbqzOwwsWnIhjcYf",
+          "name": "Project management"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Airtable2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search record1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Airtable3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d68f1e4f-cf86-4c64-96f7-b456b73a7f27",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db5a9c4e10dda7fd897779c47e93e754677e7c8b597458c46dfa01effec1646d"
+  },
+  "id": "AxyEr086uaMEeCCJ",
+  "tags": []
+}
