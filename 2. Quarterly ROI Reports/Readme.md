@@ -25,7 +25,7 @@ This workflow automatically runs every quarter and generates a comprehensive rep
 3. **Aggregate ROI Data**  
    Using a Code node, the workflow calculates:
    - **Average ROI:** Computes the average ROI across all completed projects.
-   - **ROI by Project Type/Client:** Groups projects by their `Project Type` and calculates the average ROI for each category.
+   - **ROI by Project Type:** Groups projects by their `Project Type` and calculates the average ROI for each category.
    - **Top 10% Highest and Lowest ROI Projects:** Identifies the top 10% most and least profitable projects.
 
 4. **Generate Airtable Report**  
