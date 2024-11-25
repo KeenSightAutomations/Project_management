@@ -17,7 +17,7 @@ This workflow automatically runs every quarter and generates a comprehensive rep
 
 ### **Workflow Steps**:
 1. **Trigger: Scheduled Run**  
-   The workflow is scheduled to run at the end of each quarter. The trigger initiates the process of analyzing all projects marked as `Completed` in Airtable.
+   The workflow is scheduled  to run at the end of each quarter. The trigger initiates the process of analyzing all projects marked as `Completed` in Airtable.
 
 2. **Fetch Completed Projects**  
    The Airtable node retrieves all records where `Completion Status = "Completed"`. Key project details, such as `Project Name`, `Revenue Generated`, `Actual Costs`, `Project Type`, and `Client Name`, are fetched.
